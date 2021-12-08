@@ -31,6 +31,8 @@
             this.ImageBox = new System.Windows.Forms.PictureBox();
             this.btnGetImage = new System.Windows.Forms.Button();
             this.btnSwap = new System.Windows.Forms.Button();
+            this.btnNextSolution = new System.Windows.Forms.Button();
+            this.btnPrevSolution = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.ImageBox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -68,11 +70,35 @@
             this.btnSwap.UseVisualStyleBackColor = true;
             this.btnSwap.Click += new System.EventHandler(this.SwappedClicked);
             // 
+            // btnNextSolution
+            // 
+            this.btnNextSolution.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnNextSolution.Location = new System.Drawing.Point(409, 415);
+            this.btnNextSolution.Name = "btnNextSolution";
+            this.btnNextSolution.Size = new System.Drawing.Size(75, 23);
+            this.btnNextSolution.TabIndex = 3;
+            this.btnNextSolution.Text = "Next";
+            this.btnNextSolution.UseVisualStyleBackColor = true;
+            this.btnNextSolution.Click += new System.EventHandler(this.NextSolutionClicked);
+            // 
+            // btnPrevSolution
+            // 
+            this.btnPrevSolution.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnPrevSolution.Location = new System.Drawing.Point(328, 415);
+            this.btnPrevSolution.Name = "btnPrevSolution";
+            this.btnPrevSolution.Size = new System.Drawing.Size(75, 23);
+            this.btnPrevSolution.TabIndex = 4;
+            this.btnPrevSolution.Text = "Prev";
+            this.btnPrevSolution.UseVisualStyleBackColor = true;
+            this.btnPrevSolution.Click += new System.EventHandler(this.PreviousSolutionClicked);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnPrevSolution);
+            this.Controls.Add(this.btnNextSolution);
             this.Controls.Add(this.btnSwap);
             this.Controls.Add(this.btnGetImage);
             this.Controls.Add(this.ImageBox);
@@ -88,5 +114,7 @@
         private PictureBox ImageBox;
         private Button btnGetImage;
         private Button btnSwap;
+        private Button btnNextSolution;
+        private Button btnPrevSolution;
     }
 }

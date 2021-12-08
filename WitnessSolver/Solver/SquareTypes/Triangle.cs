@@ -17,13 +17,7 @@ namespace WitnessSolver.Solver.SquareTypes
 
         public override bool IsSolved()
         {
-            var wallCount = 0;
-            foreach (var wall in Walls)
-            {
-                if (wall.Line != null)
-                    wallCount++;
-            }
-            return wallCount == Count;
+            return GetFilledWallCount() == Count;
         }
     }
 }

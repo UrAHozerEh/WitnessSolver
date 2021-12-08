@@ -11,6 +11,10 @@ namespace WitnessSolver
     {
         private Bitmap OtherImage = null;
         private KeyHandler ghk;
+        private List<List<Direction>> Solutions = new();
+        private int CurSolution = 0;
+        private Board? Board = null;
+        private Player? Player = null;
         public Form1()
         {
             InitializeComponent();
@@ -27,7 +31,7 @@ namespace WitnessSolver
             var rect = new Rectangle(quarterWidth, quarterHeight, quarterWidth * 2, quarterHeight * 4);
             var cropped = bitmap.Clone(rect, bitmap.PixelFormat);
             if (!ParseTriangles(cropped))
-               ParseGreen(cropped);
+                ParseGreen(cropped);
         }
 
         protected override void WndProc(ref Message m)
@@ -107,13 +111,11 @@ namespace WitnessSolver
             //DrawBlobs(colorBlobs, colorsImage);
             ImageBox.Image = colorsImage;
 
-            var board = Board.GetColorBoard(colors);
-            var player = new Player(board);
-            var solution = player.BeginSolve();
-            if (solution != null && player.StartLocation != null)
-                board.DoMoves(solution, player.StartLocation, player.Line);
-            ImageBox.Image = board.DrawBoard();
-
+            Board = Board.GetColorBoard(colors);
+            Player = new Player(Board);
+            var solution = Player.BeginSolve();
+            Solutions = Player.BeginSolveAll();
+            DrawSolution();
         }
 
         private Color[,] GetColors(Rectangle[,] squares, Bitmap image)
@@ -501,6 +503,33 @@ namespace WitnessSolver
 
             [DllImport("user32.dll")]
             public static extern IntPtr GetWindowRect(IntPtr hWnd, ref Rect rect);
+        }
+
+        private void NextSolutionClicked(object sender, EventArgs e)
+        {
+            ++CurSolution;
+            if (CurSolution >= Solutions.Count)
+                CurSolution = 0;
+            DrawSolution();
+        }
+
+        private void PreviousSolutionClicked(object sender, EventArgs e)
+        {
+            --CurSolution;
+            if (CurSolution < 0)
+                CurSolution = Solutions.Count - 1;
+            DrawSolution();
+        }
+
+        private void DrawSolution()
+        {
+            if (Solutions.Count == 0 || Board == null || Player == null)
+                return;
+            Text = $"Solution {CurSolution + 1} of {Solutions.Count}";
+            Board.ClearLines();
+            Board.DoMoves(Solutions[CurSolution], Player);
+            ImageBox.Image.Dispose();
+            ImageBox.Image = Board.DrawBoard();
         }
     }
 }

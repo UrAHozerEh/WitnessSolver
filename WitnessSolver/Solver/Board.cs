@@ -19,6 +19,9 @@ namespace WitnessSolver.Solver
         public Wall[,] Walls { get; private set; }
         private int WallDrawWidth = 40;
 
+        public Color BackgroundColor { get; set; } = Color.DarkSlateGray;
+        public Color WallColor { get; set; } = Color.LightGray;
+
         public Board(int width, int height)
         {
             Width = width;
@@ -101,6 +104,13 @@ namespace WitnessSolver.Solver
                     return DrawLine(nextWall, nextPossible[0], line);
             }
             return nextWall;
+        }
+
+        public Wall? DoMoves(List<Direction> moves, Player player)
+        {
+            if (player.StartLocation == null)
+                return null;
+            return DoMoves(moves, player.StartLocation, player.Line);
         }
 
         public Wall? DoMoves(List<Direction> moves, Wall start, Line line)
@@ -286,7 +296,7 @@ namespace WitnessSolver.Solver
         {
             using Graphics g = Graphics.FromImage(image);
             var pen = new Pen(Color.Blue, 5);
-
+            g.FillRectangle(new SolidBrush(BackgroundColor), new Rectangle(0,0, image.Width, image.Height));
             for (int x = 0; x < WallWidth; x++)
             {
                 for (int y = 0; y < WallHeight; y++)
@@ -296,9 +306,9 @@ namespace WitnessSolver.Solver
                     var drawX = x * WallDrawWidth;
                     var drawY = image.Height - (y + 1) * WallDrawWidth;
                     var drawRect = new Rectangle(drawX, drawY, WallDrawWidth, WallDrawWidth);
-                    
-                    Brush defaultBrush = Brushes.Black;
-                    Brush lineBrush = new SolidBrush(wall.Line?.Color ?? Color.Black);
+
+                    Brush defaultBrush = new SolidBrush(WallColor);
+                    Brush lineBrush = new SolidBrush(wall.Line?.Color ?? WallColor);
                     if (wall is Start)
                     {
                         defaultBrush = Brushes.Green;

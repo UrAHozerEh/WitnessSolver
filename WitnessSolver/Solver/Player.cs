@@ -12,7 +12,7 @@ namespace WitnessSolver.Solver
         public Board Board { get; private set; }
         public Wall? StartLocation { get; private set; }
         public Queue<Direction> Moves { get; private set; }
-        public Line Line { get; private set; } = new Line(Color.LightBlue);
+        public Line Line { get; private set; } = new Line(Color.Orange);
 
         public Player(Board board)
         {
@@ -42,7 +42,7 @@ namespace WitnessSolver.Solver
             if (curLocation == null)
                 return null;
             var possible = curLocation.GetPossibleDirections(Line);
-            if (possible.Count() == 0)
+            if (possible.Count == 0)
                 return null;
             if (Board.IsSolved(curLocation))
                 return curMoves;
@@ -56,9 +56,37 @@ namespace WitnessSolver.Solver
                 if (solution != null)
                     return solution;
             }
-
-
             return null;
+        }
+
+        public List<List<Direction>> BeginSolveAll()
+        {
+            return SolveAll(new List<Direction>(), new List<List<Direction>>());
+        }
+
+        public List<List<Direction>> SolveAll(List<Direction> curMoves, List<List<Direction>> curSolutions)
+        {
+            if (StartLocation == null)
+                return curSolutions;
+            Board.ClearLines();
+            var curLocation = Board.DoMoves(curMoves, StartLocation, Line);
+
+            if (curLocation == null)
+                return curSolutions;
+            var possible = curLocation.GetPossibleDirections(Line);
+            if (possible.Count == 0)
+                return curSolutions;
+            if (Board.IsSolved(curLocation))
+                curSolutions.Add(curMoves);
+            foreach (Direction direction in possible)
+            {
+                var nextMoves = new List<Direction>(curMoves)
+                {
+                    direction
+                };
+                curSolutions = SolveAll(nextMoves, curSolutions);
+            }
+            return curSolutions;
         }
     }
 }

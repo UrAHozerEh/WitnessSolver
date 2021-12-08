@@ -22,6 +22,17 @@ namespace WitnessSolver.Solver.SquareTypes
 
         public abstract bool IsSolved();
 
+        public int GetFilledWallCount()
+        {
+            var wallCount = 0;
+            foreach (var wall in Walls)
+            {
+                if (wall.Line != null)
+                    wallCount++;
+            }
+            return wallCount;
+        }
+
         public void Replace(Square oldSquare)
         {
             foreach (var direction in Directions.All)
