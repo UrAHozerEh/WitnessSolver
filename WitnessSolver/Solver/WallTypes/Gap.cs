@@ -12,5 +12,10 @@ namespace WitnessSolver.Solver.WallTypes
         {
             return false;
         }
+
+        public override void Draw(Graphics graphics, Rectangle drawRect, Color backgroundColor, Color wallColor)
+        {
+            
+        }
     }
 }

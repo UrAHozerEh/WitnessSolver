@@ -12,6 +12,11 @@ namespace WitnessSolver.Solver.SquareTypes
         {
         }
 
+        public override void DrawSquare(Graphics graphics, Rectangle drawRect, Color backgroundColor, Color wallColor)
+        {
+
+        }
+
         public override bool IsSolved()
         {
             return true;

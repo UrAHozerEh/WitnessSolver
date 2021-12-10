@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WitnessSolver.Solver
 {
-    internal enum Direction: int
+    internal enum Direction : int
     {
         Up = 0,
         Right,
@@ -52,5 +52,36 @@ namespace WitnessSolver.Solver
             };
         }
 
+        public static Direction FlipHorizontal(this Direction direction)
+        {
+            return direction switch
+            {
+
+                Direction.Right => Direction.Left,
+                Direction.Left => Direction.Right,
+                _ => direction,
+            };
+        }
+
+        public static Direction FlipVertical(this Direction direction)
+        {
+            return direction switch
+            {
+                Direction.Up => Direction.Down,
+                Direction.Down => Direction.Up,
+                _ => direction,
+            };
+        }
+
+        public static Direction FlipDiagonal(this Direction direction)
+        {
+            return direction.FlipVertical().FlipHorizontal();
+        }
+
+        public static Direction Rotate(this Direction direction, int count = 1)
+        {
+            var newDirection = ((int)direction + count) % 4;
+            return (Direction)newDirection;
+        }
     }
 }

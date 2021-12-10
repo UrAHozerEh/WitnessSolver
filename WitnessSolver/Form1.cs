@@ -1,8 +1,13 @@
 using AForge.Imaging;
+using Emgu.CV;
+using Emgu.CV.Structure;
+using Emgu.CV.Util;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using WitnessSolver.Solver;
+using WitnessSolver.Solver.SquareTypes;
+using WitnessSolver.Solver.WallTypes;
 using Triangle = WitnessSolver.Parser.Triangle;
 
 namespace WitnessSolver
@@ -528,8 +533,79 @@ namespace WitnessSolver
             Text = $"Solution {CurSolution + 1} of {Solutions.Count}";
             Board.ClearLines();
             Board.DoMoves(Solutions[CurSolution], Player);
-            ImageBox.Image.Dispose();
+            ImageBox.Image?.Dispose();
             ImageBox.Image = Board.DrawBoard();
+        }
+
+        private void ButtonContour_Click(object sender, EventArgs e)
+        {
+            var image = GetImageBgrFromFile(@"C:\Users\kcron\Desktop\Witness Program\Screenshot");
+            if (image == null) return;
+            ImageBox.Visible = false;
+            ImageBoxEmgu.Visible = true;
+            ImageBoxEmgu.Image = image;
+            CannyContour(image);
+        }
+
+        private void CannyContour(Image<Bgr, byte> inputImage)
+        {
+            var imageCanny = new Image<Gray, byte>(inputImage.Width, inputImage.Height, new Gray(0));
+            imageCanny = inputImage.Canny(TrackBarThreshold.Value, TrackBarLinking.Value);
+
+            var contours = new VectorOfVectorOfPoint();
+            var hier = new Mat();
+            //CvInvoke.FindContours(imageCanny, contours, hier, Emgu.CV.CvEnum.RetrType.External, Emgu.CV.CvEnum.ChainApproxMethod.ChainApproxSimple);
+            var tree = CvInvoke.FindContourTree(imageCanny, contours, Emgu.CV.CvEnum.ChainApproxMethod.ChainApproxNone);
+            CvInvoke.DrawContours(imageCanny, contours, 0, new MCvScalar(255, 0, 0), 2);
+            ImageBoxEmgu.Image = imageCanny;
+        }
+
+        private Image<Bgr, byte>? GetImageBgrFromFile(string location)
+        {
+            var files = Directory.GetFiles(location);
+            foreach (var file in files)
+            {
+                if (File.Exists(file))
+                {
+                    return new Image<Bgr, byte>(file);
+                }
+            }
+            return null;
+
+        }
+
+        private void TrackBarLinking_Scroll(object sender, EventArgs e)
+        {
+            TextBoxLinking.Text = TrackBarLinking.Value.ToString();
+        }
+
+        private void TrackBarThreshold_Scroll(object sender, EventArgs e)
+        {
+            TextBoxThreshold.Text = TrackBarThreshold.Value.ToString();
+        }
+
+        private void ButtonTetris_Click(object sender, EventArgs e)
+        {
+            Board = new Board(4, 4);
+            Board.InsertHorizontalWall(new Gap(), 0, 0);
+            Board.InsertHorizontalWall(new Gap(), 1, 3);
+            Board.InsertHorizontalWall(new Gap(), 3, 2);
+            Board.InsertHorizontalWall(new Gap(), 3, 3);
+
+            Board.InsertVerticalWall(new Gap(), 0, 3);
+            Board.InsertVerticalWall(new Gap(), 1, 3);
+            Board.InsertVerticalWall(new Gap(), 2, 0);
+            Board.InsertVerticalWall(new Gap(), 3, 1);
+
+            Board.InsertSquare(new TetrisSquare(2, 0, Color.Yellow, TetrisSquareShape.GetHorizontalLine(3)));
+            Board.InsertSquare(new TetrisSquare(3, 0, Color.Yellow, TetrisSquareShape.GetL(3, 2).GetRotatedShape(2)));
+
+            Board.InsertSquare(new SpikeColorSquare(3, 1, Color.Black));
+            Board.InsertSquare(new SpikeColorSquare(2, 3, Color.Black));
+
+            Player = new Player(Board);
+            Solutions = Player.BeginSolveAll();
+            DrawSolution();
         }
     }
 }

@@ -34,8 +34,6 @@ namespace WitnessSolver.Solver
 
             LinkSquares();
             LinkWalls();
-
-
         }
 
         public static Board GetTrianlgeBoard(Rectangle[,] rectanges, List<ParseTriangle> triangles)
@@ -53,7 +51,7 @@ namespace WitnessSolver.Solver
                         if (curRect.Contains(tX, tY))
                         {
                             var curSquare = new Triangle(triangle.Count, x, y);
-                            output.Insert(curSquare);
+                            output.InsertSquare(curSquare);
                         }
                     }
                 }
@@ -73,7 +71,7 @@ namespace WitnessSolver.Solver
                     var curColor = colors[x, y];
                     if (curColor.A == 0)
                         continue;
-                    output.Insert(new ColorSquare(x, y, curColor));
+                    output.InsertSquare(new ColorSquare(x, y, curColor));
                 }
             }
 
@@ -93,7 +91,7 @@ namespace WitnessSolver.Solver
         private Wall? DrawLine(Wall start, Direction direction, Line line, bool repeatOneMove = false)
         {
             start.Line = line;
-            var nextWall = start.GetNeighbor(direction);
+            var nextWall = start.GetWall(direction);
             if (nextWall == null || !nextWall.IsPassable(line))
                 return null;
             nextWall.Line = line;
@@ -129,11 +127,41 @@ namespace WitnessSolver.Solver
             return curWall;
         }
 
-        public void Insert(Square square)
+        public void InsertSquare(Square square)
         {
             var replaced = Squares[square.Row, square.Column];
             square.Replace(replaced);
             Squares[square.Row, square.Column] = square;
+        }
+
+        public void InsertCorner(Wall wall, int x, int y)
+        {
+            var finalX = x * 2;
+            var finalY = y * 2;
+            InsertWall(wall, finalX, finalY);
+        }
+
+        public void InsertVerticalWall(Wall wall, int x, int y)
+        {
+            var finalX = x * 2;
+            var finalY = y * 2 + 1;
+            InsertWall(wall, finalX, finalY);
+        }
+
+        public void InsertHorizontalWall(Wall wall, int x, int y)
+        {
+            var finalX = x * 2 + 1;
+            var finalY = y * 2;
+            InsertWall(wall, finalX, finalY);
+        }
+
+        public void InsertWall(Wall wall, int x, int y)
+        {
+            var replaced = Walls[x, y];
+            if(replaced == null)
+                return;
+            wall.Replace(replaced);
+            Walls[x, y] = wall;
         }
 
         public Square? GetSquare(int x, int y)
@@ -174,12 +202,15 @@ namespace WitnessSolver.Solver
                         var (curX, curY) = direction.GetPoint(x, y);
                         var curSquare = GetSquare(curX, curY);
                         if (curSquare != null)
-                            square.Neighbors[(int)direction] = curSquare;
+                            square.SetSquare(direction, curSquare);
 
                         var (curWallX, curWallY) = direction.GetPoint(wallX, wallY);
                         var curWall = GetWall(curWallX, curWallY);
                         if (curWall != null)
-                            square.Walls[(int)direction] = curWall;
+                        {
+                            square.SetWall(direction, curWall);
+                            curWall.SetSquare(direction.Reverse(), square);
+                        }
                     }
                 }
             }
@@ -187,7 +218,6 @@ namespace WitnessSolver.Solver
 
         public static (int X, int Y) SquareToWall(int x, int y)
         {
-
             return (x * 2 + 1, y * 2 + 1);
         }
 
@@ -225,7 +255,8 @@ namespace WitnessSolver.Solver
                         var (curX, curY) = direction.GetPoint(x, y);
                         var curWall = GetWall(curX, curY);
                         if (curWall != null)
-                            wall.Neighbors[(int)direction] = curWall;
+                            wall.SetWall(direction, curWall);
+                        
                     }
                 }
             }
@@ -264,12 +295,7 @@ namespace WitnessSolver.Solver
         {
             using Graphics g = Graphics.FromImage(image);
             var pen = new Pen(Color.Blue, 5);
-            var font = new Font(FontFamily.GenericSerif, WallDrawWidth, FontStyle.Bold);
-            var format = new StringFormat
-            {
-                LineAlignment = StringAlignment.Center,
-                Alignment = StringAlignment.Center
-            };
+            
             foreach (var square in Squares)
             {
                 if (square is Blank) continue;
@@ -277,18 +303,7 @@ namespace WitnessSolver.Solver
                 var drawX = x * WallDrawWidth;
                 var drawY = image.Height - (y + 1) * WallDrawWidth;
                 var drawRect = new Rectangle(drawX, drawY, WallDrawWidth, WallDrawWidth);
-                if (square is Triangle tri)
-                {
-                    g.DrawString(tri.Count.ToString(), font, (tri.IsSolved() ? Brushes.Green : Brushes.Red), drawRect, format);
-                }
-                if (square is ColorSquare colorSquare)
-                {
-                    var fillBrush = new SolidBrush(colorSquare.Color);
-                    var solvedPen = new Pen(colorSquare.IsSolved() ? Color.Green : Color.Red, 5);
-                    g.FillRectangle(fillBrush, drawRect);
-                    g.DrawRectangle(solvedPen, drawRect);
-                }
-
+                square.DrawSquare(g, drawRect, BackgroundColor, WallColor);
             }
         }
 
@@ -296,7 +311,7 @@ namespace WitnessSolver.Solver
         {
             using Graphics g = Graphics.FromImage(image);
             var pen = new Pen(Color.Blue, 5);
-            g.FillRectangle(new SolidBrush(BackgroundColor), new Rectangle(0,0, image.Width, image.Height));
+            g.FillRectangle(new SolidBrush(BackgroundColor), new Rectangle(0, 0, image.Width, image.Height));
             for (int x = 0; x < WallWidth; x++)
             {
                 for (int y = 0; y < WallHeight; y++)
@@ -307,55 +322,7 @@ namespace WitnessSolver.Solver
                     var drawY = image.Height - (y + 1) * WallDrawWidth;
                     var drawRect = new Rectangle(drawX, drawY, WallDrawWidth, WallDrawWidth);
 
-                    Brush defaultBrush = new SolidBrush(WallColor);
-                    Brush lineBrush = new SolidBrush(wall.Line?.Color ?? WallColor);
-                    if (wall is Start)
-                    {
-                        defaultBrush = Brushes.Green;
-                        lineBrush = Brushes.Green;
-                    }
-                    if (wall is Finish)
-                    {
-                        defaultBrush = Brushes.Red;
-                        lineBrush = Brushes.Red;
-                    }
-                    var quarterWidth = drawRect.Width / 4;
-                    var middleRect = new Rectangle(drawRect.X + (drawRect.Width / 2) - quarterWidth / 2, drawRect.Y + (drawRect.Height / 2) - quarterWidth / 2, quarterWidth, quarterWidth);
-
-                    foreach (var direction in Directions.All)
-                    {
-                        var neighbor = wall.Neighbors[(int)direction];
-                        if (neighbor == null || neighbor is Gap) continue;
-
-                        var nextX = middleRect.X;
-                        var nextY = middleRect.Y;
-                        var nextWidth = middleRect.Width;
-                        var nextHeight = middleRect.Height;
-                        var nextBrush = wall.Line?.Color == neighbor.Line?.Color ? lineBrush : defaultBrush;
-                        switch (direction)
-                        {
-                            case Direction.Up:
-                                nextY = drawRect.Top;
-                                nextHeight += middleRect.Top - drawRect.Top;
-                                break;
-                            case Direction.Right:
-                                nextWidth += drawRect.Right - middleRect.Right;
-                                break;
-                            case Direction.Down:
-                                nextHeight += drawRect.Bottom - middleRect.Bottom;
-                                break;
-                            case Direction.Left:
-                                nextX = drawRect.Left;
-                                nextWidth += middleRect.Left - drawRect.Left;
-                                break;
-                            default:
-                                break;
-                        }
-                        var nextRect = new Rectangle(nextX, nextY, nextWidth, nextHeight);
-                        g.FillRectangle(nextBrush, nextRect);
-                        //g.DrawRectangle(new Pen(Color.Goldenrod), nextRect);
-                    }
-                    g.FillRectangle(lineBrush, middleRect);
+                    wall.Draw(g, drawRect, BackgroundColor, WallColor);
                 }
             }
         }

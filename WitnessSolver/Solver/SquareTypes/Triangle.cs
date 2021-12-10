@@ -19,5 +19,16 @@ namespace WitnessSolver.Solver.SquareTypes
         {
             return GetFilledWallCount() == Count;
         }
+
+        public override void DrawSquare(Graphics graphics, Rectangle drawRect, Color backgroundColor, Color wallColor)
+        {
+            var font = new Font(FontFamily.GenericSerif, drawRect.Height, FontStyle.Bold);
+            var format = new StringFormat
+            {
+                LineAlignment = StringAlignment.Center,
+                Alignment = StringAlignment.Center
+            };
+            graphics.DrawString(Count.ToString(), font, (IsSolved() ? Brushes.Green : Brushes.Red), drawRect, format);
+        }
     }
 }

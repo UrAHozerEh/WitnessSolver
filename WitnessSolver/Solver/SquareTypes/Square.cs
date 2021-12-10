@@ -11,8 +11,8 @@ namespace WitnessSolver.Solver.SquareTypes
     {
         public int Row { get; }
         public int Column { get; }
-        public Square[] Neighbors { get; set; } = new Square[4];
-        public Wall[] Walls { get; set; } = new Wall[4];
+        private Square?[] Neighbors { get; set; } = new Square[4];
+        private Wall?[] Walls { get; set; } = new Wall[4];
 
         public Square(int row, int col)
         {
@@ -20,14 +20,36 @@ namespace WitnessSolver.Solver.SquareTypes
             Column = col;
         }
 
+        public abstract void DrawSquare(Graphics graphics, Rectangle drawRect, Color backgroundColor, Color wallColor);
+
         public abstract bool IsSolved();
+
+        public Square? GetSquare(Direction direction)
+        {
+            return Neighbors[(int)direction];
+        }
+
+        public void SetSquare(Direction direction, Square? square)
+        {
+            Neighbors[(int)direction] = square;
+        }
+
+        public Wall? GetWall(Direction direction)
+        {
+            return Walls[(int)direction];
+        }
+
+        public void SetWall(Direction direction, Wall? wall)
+        {
+            Walls[(int)direction] = wall;
+        }
 
         public int GetFilledWallCount()
         {
             var wallCount = 0;
             foreach (var wall in Walls)
             {
-                if (wall.Line != null)
+                if (wall != null && wall.Line != null)
                     wallCount++;
             }
             return wallCount;
@@ -37,12 +59,52 @@ namespace WitnessSolver.Solver.SquareTypes
         {
             foreach (var direction in Directions.All)
             {
-                var square = oldSquare.Neighbors[(int)direction];
-                Neighbors[(int)direction] = square;
-                if (square != null)
-                    square.Neighbors[(int)direction.Reverse()] = this;
-                Walls[(int)direction] = oldSquare.Walls[(int)direction];
+                var curSquare = oldSquare.GetSquare(direction);
+                SetSquare(direction, curSquare);
+                if (curSquare != null)
+                    curSquare.SetSquare(direction.Reverse(), this);
+
+                var curWall = oldSquare.GetWall(direction);
+                SetWall(direction, curWall);
+                if (curWall != null)
+                    curWall.SetSquare(direction.Reverse(), this);
             }
+        }
+
+        public List<T> GetEnclosed<T>() where T : Square
+        {
+            var enclosed = GetEnclosed(new List<Square>());
+            var output = new List<T>();
+            foreach (var square in enclosed)
+            {
+                if (square is T t)
+                {
+                    output.Add(t);
+                }
+            }
+            return output;
+        }
+
+        public List<Square> GetAllSquares()
+        {
+            return GetAllSquares(new List<Square>());
+        }
+
+        private List<Square> GetAllSquares(List<Square> current)
+        {
+            if (current.Contains(this))
+                return current;
+            current.Add(this);
+            foreach (var direction in Directions.All)
+            {
+                var square = GetSquare(direction);
+                if (square == null)
+                    continue;
+
+                current = square.GetEnclosed(current);
+            }
+
+            return current;
         }
 
         public List<Square> GetEnclosed()
@@ -58,7 +120,7 @@ namespace WitnessSolver.Solver.SquareTypes
             foreach (var direction in Directions.All)
             {
                 var wall = Walls[(int)direction];
-                var square = Neighbors[(int)direction];
+                var square = GetSquare(direction);
                 if (square == null)
                     continue;
                 if (wall?.Line == null)
@@ -66,7 +128,7 @@ namespace WitnessSolver.Solver.SquareTypes
                     current = square.GetEnclosed(current);
                 }
             }
-            
+
             return current;
         }
 

@@ -10,6 +10,9 @@
 
   <ItemGroup>
     <PackageReference Include="AForge.Imaging" Version="2.2.5" />
+    <PackageReference Include="Emgu.CV" Version="4.5.4.4788" />
+    <PackageReference Include="Emgu.CV.runtime.windows" Version="4.5.4.4788" />
+    <PackageReference Include="Emgu.CV.UI" Version="4.5.4.4788" />
   </ItemGroup>
 
 </Project>

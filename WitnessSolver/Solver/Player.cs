@@ -32,7 +32,7 @@ namespace WitnessSolver.Solver
             return solution;
         }
 
-        public List<Direction>? Solve(List<Direction> curMoves)
+        private List<Direction>? Solve(List<Direction> curMoves)
         {
             if (StartLocation == null)
                 return null;
@@ -64,7 +64,7 @@ namespace WitnessSolver.Solver
             return SolveAll(new List<Direction>(), new List<List<Direction>>());
         }
 
-        public List<List<Direction>> SolveAll(List<Direction> curMoves, List<List<Direction>> curSolutions)
+        private List<List<Direction>> SolveAll(List<Direction> curMoves, List<List<Direction>> curSolutions)
         {
             if (StartLocation == null)
                 return curSolutions;

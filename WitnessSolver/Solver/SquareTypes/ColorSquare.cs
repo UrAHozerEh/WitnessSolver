@@ -16,16 +16,21 @@ namespace WitnessSolver.Solver.SquareTypes
 
         public override bool IsSolved()
         {
-            var enclosed = GetEnclosed();
-            foreach(var square in enclosed)
+            var enclosed = GetEnclosed<ColorSquare>();
+            foreach (var square in enclosed)
             {
-                if(square is ColorSquare otherColor)
-                {
-                    if (otherColor.Color != Color)
-                        return false;
-                }
+                if (square.Color != Color)
+                    return false;
             }
             return true;
+        }
+
+        public override void DrawSquare(Graphics graphics, Rectangle drawRect, Color backgroundColor, Color wallColor)
+        {
+            var fillBrush = new SolidBrush(Color);
+            var solvedPen = new Pen(IsSolved() ? Color.Green : Color.Red, 5);
+            graphics.FillRectangle(fillBrush, drawRect);
+            graphics.DrawRectangle(solvedPen, drawRect);
         }
     }
 }
